@@ -38,6 +38,7 @@
         .delete-btn { color: var(--danger); cursor: pointer; border: none; background: none; font-size: 1.2em; padding: 5px; }
         
         .status { text-align: center; font-size: 0.85em; color: #666; margin-top: 15px; min-height: 1.2em; }
+        .status:empty { display: none; }
         .hidden { display: none; }
         .lock-icon { font-size: 1.2em; vertical-align: middle; margin-right: 5px; }
     </style>
@@ -77,8 +78,8 @@
         </div>
 
         <ul id="todoList"></ul>
-        <div class="status" id="statusMsg"></div>
     </div>
+        <div class="status" id="statusMsg"></div>
 </div>
 
 <script>
@@ -88,6 +89,7 @@
         username: params.get('username') || localStorage.getItem('gh_username') || '',
         gistId: params.get('gistId') || localStorage.getItem('gh_gist_id') || '',
         token: localStorage.getItem('gh_token') || '',
+        encryptKey: sessionStorage.getItem('gh_key') || '',
     };
 
     if (params.has('username')) localStorage.setItem('gh_username', config.username);
@@ -173,6 +175,11 @@
             document.getElementById('username').value = config.username;
             document.getElementById('gistId').value = config.gistId;
             document.getElementById('token').value = config.token;
+            document.getElementById('encryptKey').value = config.encryptKey;
+        }
+
+        if (config.username && config.gistId && config.token && config.encryptKey) {
+            saveConfig();
         }
     }
 
@@ -182,8 +189,8 @@
         const token = document.getElementById('token').value.trim();
         const key = document.getElementById('encryptKey').value.trim();
 
-        if (!id || !token || !key) {
-            alert('Заполните все поля: Gist ID, Token и Ключ шифрования');
+        if (!id || !token || !key || !user) {
+            alert('Заполните все поля: username, Gist ID, Token и Ключ шифрования');
             return;
         }
 
@@ -191,6 +198,7 @@
         config.token = token;
         localStorage.setItem('gh_gist_id', id);
         localStorage.setItem('gh_token', token);
+        sessionStorage.setItem('gh_key', key);
 
         try {
             setStatus('Генерация ключа шифрования...');
@@ -235,6 +243,8 @@
             setStatus('Синхронизировано 🔒');
         } catch (e) {
             console.error(e);
+                document.getElementById('authBlock').classList.remove('hidden');
+            document.getElementById('appBlock').classList.add('hidden');
             setStatus('Ошибка чтения: ' + e.message);
         }
     }
